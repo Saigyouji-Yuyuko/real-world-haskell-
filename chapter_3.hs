@@ -1,5 +1,5 @@
 --import Prelude(Eq,Show,Double,String,Int,Num)
-import Data.List
+import Data.List(sortBy)
 
 data BookInfo = Book Int String [String]
                 deriving(Show)
@@ -211,14 +211,11 @@ huiwen xs =   xs ++ reverse xs
         where   reserve [] = []
                 reserve (x:xs)  = reserve xs ++ x
 
-ishuiwen xs | length xs >= 2   
-                =   if head xs == last xs
-                    then ishuiwen (init (tail xs))
-                    else False
 ishuiwen []     = True
 ishuiwen (x:[]) = True 
-
-
+ishuiwen xs     =   if head xs == last xs
+                    then ishuiwen (init (tail xs))
+                    else False
 
 ddsort xs = sortBy sortHelp xs
     where sortHelp a b 
@@ -226,3 +223,88 @@ ddsort xs = sortBy sortHelp xs
             | length a > length b   = GT
             | otherwise             = LT  
 
+intersperse :: a -> [[a]] -> [a]
+
+intersperse _ []        = []
+intersperse _ (x:[])    = x
+intersperse a (x:xs)    = x ++ [a] ++ (intersperse a xs)
+
+treeHigh :: (Tree a) -> Int
+
+treeHigh Empty = 0
+treeHigh (Node a left right) =  if leftHigh > rightHigh  
+                                then leftHigh + 1
+                                else rightHigh + 1
+                        where   leftHigh        = treeHigh left
+                                rightHigh       = treeHigh right
+
+data Point2D      = Point{x::Double,y::Double}
+                deriving(Show,Ord,Eq)
+
+data Direction  = LEFT
+                | RIGHT
+                | STRAIGTH
+                deriving(Show,Eq)
+
+direction :: Point2D -> Point2D -> Point2D -> Direction
+
+direction a b c
+                | x1*y2 > x2*y1 = RIGHT
+                | x1*y2 < x2*y1 = LEFT
+                | otherwise     = STRAIGTH
+        where   x1 = (x a) - (x b)
+                x2 = (x c) - (x b)
+                y1 = (y a) - (y b)
+                y2 = (y c) - (y b)
+
+allDirection :: [Point2D] -> [Direction]
+
+allDirection (a:b:c:xs) = ((direction a b c):(allDirection (b:c:xs) ))
+allDirection _ = []                                                     
+
+gramhamScan :: [Point2D] -> [Point2D]
+
+-- cmpPoint :: Point2D -> Point2D -> Ordering
+
+anglePoint ::Point2D -> Point2D -> Double
+
+anglePoint a b =(y b - y a)/ (x b - x a)
+
+minXY :: [Point2D] -> (Point2D,[Point2D])
+
+minXY (x:[])    = (x,[])
+minXY (x:xs)    = let   tuple = minXY xs
+                        minn  = fst tuple
+                        xsss  = snd tuple
+                  in ((min x minn),((max minn x):xsss))
+
+
+sortByAngle minxy xs = sortBy cmp xs
+        where   cmp a b
+                                | angleA > angleB = GT
+                                | angleA < angleB = LT
+                                | otherwise       = EQ
+                        where angleA = anglePoint minxy a
+                              angleB = anglePoint minxy b 
+
+scan (x:a:b:xs) 
+        |  (direction x a b) == RIGHT  = (scan (x:b:xs))
+scan a = a
+
+gramhamScan xs = let minnXY     = minXY xs
+                     minPoint   = fst minnXY
+                     allPoint   = (minPoint :(sortByAngle minPoint (snd minnXY)))
+                     push p xss = (scan (p:xss))
+                 in foldr push [] allPoint    
+                 
+p0 = Point (-3)   1
+p1 = Point (-4) 1
+p2 = Point (-1)  4
+p3 = Point 0    0
+p4 = Point 2  2
+p5 = Point (-1)  3
+p6 = Point (-1)   2
+p7 = Point 1  0
+p8 = Point 3 (-1)
+p9 = Point (-1) (-1)
+points = [p0,p1,p2,p3,p4,p5,p6,p7,p8,p9]
